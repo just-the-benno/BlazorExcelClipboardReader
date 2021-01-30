@@ -8,18 +8,18 @@ using System.Threading.Tasks;
 
 namespace BlazorExcelClipboardReader.Services
 {
-    public class ExcelHtmlContentParser : IExcelContentParser
+public class ExcelHtmlContentParser : IExcelContentParser
+{
+    public String ValidMimeType { get; } = "text/html";
+
+    public async Task<IList<String[]>> GetRows(String input)
     {
-        public String ValidMimeType { get; } = "text/html";
+        var context = BrowsingContext.New(Configuration.Default);
+        var document = await context.OpenAsync(reg => reg.Content(input));
 
-        public async Task<IList<String[]>> GetRows(String input)
-        {
-            var context = BrowsingContext.New(Configuration.Default);
-            var document = await context.OpenAsync(reg => reg.Content(input));
-
-            var element = document.QuerySelector<IHtmlTableElement>("table");
-            var result = element.Rows.Select(x => x.Cells.Select(y => y.TextContent).ToArray()).ToList();
-            return result;
-        }
+        var element = document.QuerySelector<IHtmlTableElement>("table");
+        var result = element.Rows.Select(x => x.Cells.Select(y => y.TextContent).ToArray()).ToList();
+        return result;
     }
+}
 }

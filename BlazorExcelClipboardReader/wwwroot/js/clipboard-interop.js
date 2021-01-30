@@ -12,14 +12,11 @@ BlazorClipboadInterop.toBase64 = file => new Promise((resolve, reject) => {
     reader.onerror = error => reject(error);
 });
 
-
 BlazorClipboadInterop.pasteEvent =
     async function (e, dotNetObject) {
 
         var data = await navigator.clipboard.read();
-        var items = [];
-
-        console.log(data);
+        var items = []; //is passed to C#
 
         for (let i = 0; i < data.length; i++) {
             var item = {};
@@ -30,7 +27,6 @@ BlazorClipboadInterop.pasteEvent =
 
                 const blob = await data[i].getType(type);
                 if (blob) {
-                    console.log(blob);
 
                     if (type.startsWith("text") == true) {
                         const content = await blob.text();
@@ -41,11 +37,8 @@ BlazorClipboadInterop.pasteEvent =
                     }
                 }
             }
-
-            console.log(items);
         }
 
         dotNetObject.invokeMethodAsync('Pasted', items);
-
         e.preventDefault();
     }
