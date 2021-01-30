@@ -1,0 +1,77 @@
+﻿@page "/"
+
+
+    <div class="form-group">
+        <label for="parser">Parser type</label>
+        <select class="form-control" id="parser" @bind="_parserType">
+            <option value="text">Text</option>
+            <option value="html">HTML</option>
+        </select>
+    </div>
+
+    <PasteAwareComponent OnContentPasted="FillTable">
+
+        @if (_excelContent.Any() == false)
+        {
+            <p>No Content</p>
+        }
+        else
+        {
+            <table class="table table-striped">
+                @foreach (var row in _excelContent)
+                {
+                    <tr>
+                        @foreach (var cell in row)
+                        {
+                            <td>@cell</td>
+                        }
+                    </tr>
+                }
+            </table>
+        }
+
+    </PasteAwareComponent>
+
+<button type="button" class="btn btn-primary" @onclick="@( () => _excelContent = new List<String[]>() )">Clear</button>
+
+    @code
+{
+        private IList<String[]> _excelContent = new List<String[]>();
+
+        private String _parserType = "text";
+
+        private async Task FillTable(IEnumerable<IDictionary<String, String>> content)
+        {
+            if (content == null || content.Count() != 1)
+            {
+                return;
+            }
+
+            var clipboardContent = content.ElementAt(0);
+            IExcelContentParser parser = null;
+            switch (_parserType)
+            {
+                case "text":
+                    parser = new ExcelTextContentParser();
+                    break;
+                case "html":
+                    parser = new ExcelHtmlContentParser();
+                    break;
+                default:
+                    break;
+            }
+
+            foreach (var item in clipboardContent)
+            {
+                if(parser.CanParse(item.Key) == false)
+                {
+                    continue;
+                }
+
+                _excelContent = await parser.GetRows(item.Value);
+            }
+
+            await InvokeAsync(StateHasChanged);
+        }
+
+    }
